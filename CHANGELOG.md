@@ -13,4 +13,5 @@ First release. Tasks for people: any module gives a person something to do by a 
   `entirius-django-notifications` 0.3.0 (soft dependency).
 - Admin API v2 under `api/todo/v2/admin/<channel_idx>/`: `tasks/` (list, create), `tasks/<id>/` (get, patch),
   `done/`, `cancel/`, `reopen/`, `today/`. Access area `todo.tasks`.
+- `django_todo.__version__ = "0.1.0"` (munin reports it); a test keeps it equal to `pyproject.toml`.
 - GDPR hooks with empty results: the module holds references, not addresses.
