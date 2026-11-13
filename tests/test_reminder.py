@@ -76,6 +76,32 @@ def test_a_channel_unknown_to_notifications_is_stamped_without_a_notification(be
     assert not bell.exists()
 
 
+def test_a_reopened_due_task_is_reminded_again(bell, staff):
+    task = make_task(owner_id=staff.pk, due_at=_past())
+    reminder_service.remind_due()
+    task_service.reopen(task_service.close(task, outcome="", actor="anna"), actor="anna")
+    assert reminder_service.remind_due() == 1
+
+
+def test_a_task_notify_refuses_is_stamped_and_the_batch_goes_on(monkeypatch, bell, staff):
+    first = make_task(owner_id=staff.pk, due_at=datetime(2026, 1, 1, tzinfo=UTC), title="first")
+    make_task(owner_id=staff.pk, due_at=_past(), title="second")
+    from django_notifications.services import notify_service
+
+    original = notify_service.notify
+
+    def refuse_first(**kwargs):
+        if kwargs["title"] == "Due: first":
+            raise ValueError("Unknown recipient user")
+        return original(**kwargs)
+
+    monkeypatch.setattr(notify_service, "notify", refuse_first)
+    assert reminder_service.remind_due() == 1
+    first.refresh_from_db()
+    assert first.reminded_at is not None
+    assert list(bell.values_list("title", flat=True)) == ["Due: second"]
+
+
 def test_without_notifications_nothing_is_sent_or_stamped(monkeypatch, bell, staff):
     monkeypatch.setattr(reminder_service.apps, "is_installed", lambda label: label != "django_notifications")
     task = make_task(owner_id=staff.pk, due_at=_past())

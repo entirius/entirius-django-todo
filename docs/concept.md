@@ -57,8 +57,10 @@ after today, and the first 50 overdue and today tasks, oldest due first.
 Beat runs `django_todo.remind_due` every 15 minutes. Every open task with an owner, a `due_at` in the past and no
 `reminded_at` gets one notification through `django_notifications.notify()` — addressed to the owner alone
 (`recipient_user_id`), bell-only (`escalate=False`), severity `medium`, recipient role `todo`, title
-`Due: <title>`, the task's `subject_ref` — and is stamped `reminded_at`. A changed `due_at` clears the stamp, so
-the new date is reminded again. Without the notifications module the run sends nothing and stamps nothing.
+`Due: <title>`, the task's `subject_ref` — and is stamped `reminded_at`. A changed `due_at`, a new owner and a
+reopen clear the stamp, so the new date or the new owner is reminded again. A task `notify()` refuses (a channel
+unknown to notifications, an owner gone in the meantime) is stamped and logged, so it never holds the batch back.
+Without the notifications module the run sends nothing and stamps nothing.
 
 ## Signals
 

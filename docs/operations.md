@@ -10,8 +10,8 @@ python manage.py shell -c "from django_todo.services import reminder_service; pr
 ```
 
 Returns how many owners were notified. A task is reminded once per due date: `reminded_at` is set even when the
-channel is unknown to notifications (log `event=todo.remind skipped=unknown_channel channel=… task=…`), so such a
-task is never retried. To remind it again after creating the notifications channel, clear the stamp:
+channel is unknown to notifications (log `event=todo.remind skipped=unknown_channel channel=… task=…`) or the owner
+vanished before the call (`skipped=unknown_owner`), so such a task is never retried. To remind it again after creating the notifications channel, clear the stamp:
 `Task.objects.filter(pk=…).update(reminded_at=None)`.
 
 Repeats of one reminder (a due date moved and passed again within a minute) are counted on the existing unread

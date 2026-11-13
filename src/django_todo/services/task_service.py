@@ -21,6 +21,8 @@ from django_todo.signals import task_closed, task_created, task_reopened
 
 # `update()` refuses every other field: status, closing and dedup go through their own functions.
 EDITABLE_FIELDS = frozenset({"title", "note", "due_at", "kind", "owner_id"})
+# A change of either clears `reminded_at`: the new date or the new owner gets the reminder.
+REMIND_AGAIN_ON = ("due_at", "owner_id")
 # `list_tasks(owner=NO_OWNER)` returns tasks nobody owns.
 NO_OWNER = "none"
 ERASED = "[erased]"
@@ -74,10 +76,12 @@ def _insert(task: Task) -> Task:
         with transaction.atomic():
             task.save()
     except IntegrityError:
-        # A concurrent create with the same key won the open-task constraint: return its task.
         if task.dedup_key is None:
             raise
-        return Task.objects.get(channel_idx=task.channel_idx, dedup_key=task.dedup_key, status=Status.OPEN)
+        # A concurrent create with the same key won the open-task constraint: return its task, or insert again
+        # when it was closed in the meantime.
+        existing = _open_with_key(task.channel_idx, task.dedup_key)
+        return existing if existing is not None else _insert(task)
     _send_on_commit(task_created, task)
     return task
 
@@ -95,7 +99,10 @@ def _assignable(owner_id: int | None) -> int | None:
 
 
 def update(task: Task, updates: dict[str, Any]) -> Task:
-    """Apply whitelisted fields; a changed `due_at` clears `reminded_at`, so the new date is reminded again."""
+    """Apply whitelisted fields; a changed `due_at` or owner clears `reminded_at`, so it is reminded again.
+
+    Saves only those fields: a concurrent close or reminder stamp is never written back.
+    """
     invalid = set(updates) - EDITABLE_FIELDS
     if invalid:
         raise ValueError(f"Fields not editable via update: {sorted(invalid)}")
@@ -103,11 +110,11 @@ def update(task: Task, updates: dict[str, Any]) -> Task:
         updates = {**updates, "kind": Kind(updates["kind"]).value}
     if "owner_id" in updates:
         _assignable(updates["owner_id"])
-    if "due_at" in updates and updates["due_at"] != task.due_at:
+    if any(field in updates and updates[field] != getattr(task, field) for field in REMIND_AGAIN_ON):
         task.reminded_at = None
     for field, value in updates.items():
         setattr(task, field, value)
-    task.save()
+    task.save(update_fields=[*updates, "reminded_at", "modified_at"])
     return task
 
 
@@ -131,9 +138,15 @@ def _finish(task: Task, status: Status, *, outcome: str, actor: str) -> Task:
 
 
 def reopen(task: Task, *, actor: str) -> Task:
-    """Open again; `done_at` and `done_by` clear, the outcome stays. Raises `TaskStateError` when the task is open
-    or another open task holds its `dedup_key`."""
-    changes = {"status": Status.OPEN, "done_at": None, "done_by": "", "modified_at": timezone.now()}
+    """Open again; `done_at`, `done_by` and `reminded_at` clear, the outcome stays. Raises `TaskStateError` when the
+    task is open or another open task holds its `dedup_key`."""
+    changes = {
+        "status": Status.OPEN,
+        "done_at": None,
+        "done_by": "",
+        "reminded_at": None,
+        "modified_at": timezone.now(),
+    }
     try:
         with transaction.atomic():
             reopened = Task.objects.filter(pk=task.pk).exclude(status=Status.OPEN).update(**changes)

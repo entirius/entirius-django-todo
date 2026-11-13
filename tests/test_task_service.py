@@ -130,6 +130,38 @@ def test_a_new_due_date_clears_reminded_at_and_the_same_keeps_it():
     assert task.reminded_at is None
 
 
+def test_a_new_owner_clears_reminded_at(staff, other_staff):
+    task = make_task(owner_id=staff.pk, due_at=DUE)
+    Task.objects.filter(pk=task.pk).update(reminded_at=DUE)
+    task.refresh_from_db()
+    task_service.update(task, {"owner_id": other_staff.pk})
+    task.refresh_from_db()
+    assert task.reminded_at is None
+
+
+def test_update_never_writes_back_a_concurrent_close():
+    stale = make_task()
+    task_service.close(Task.objects.get(pk=stale.pk), outcome="Done.", actor="piotr")
+    task_service.update(stale, {"title": "Renamed"})
+    stale.refresh_from_db()
+    assert (stale.title, stale.status, stale.outcome) == ("Renamed", Status.DONE, "Done.")
+
+
+def test_a_lost_dedup_race_returns_the_winners_task(monkeypatch):
+    """The first lookup misses (the winner inserts right after it); the insert then hits the constraint."""
+    winner = make_task(dedup_key="reply:1")
+    original, calls = task_service._open_with_key, []
+
+    def miss_first(*args):
+        calls.append(args)
+        return None if len(calls) == 1 else original(*args)
+
+    monkeypatch.setattr(task_service, "_open_with_key", miss_first)
+    assert make_task(dedup_key="reply:1").pk == winner.pk
+    assert len(calls) == 2
+    assert Task.objects.count() == 1
+
+
 def test_close_stores_the_outcome_and_signals(django_capture_on_commit_callbacks, received):
     task = make_task()
     with django_capture_on_commit_callbacks(execute=True):
@@ -160,9 +192,11 @@ def test_closing_a_closed_task_is_refused():
 
 def test_reopen_clears_the_closing_and_signals(django_capture_on_commit_callbacks, received):
     task = task_service.close(make_task(), outcome="Done.", actor="anna")
+    Task.objects.filter(pk=task.pk).update(reminded_at=DUE)
     with django_capture_on_commit_callbacks(execute=True):
         task_service.reopen(task, actor="anna")
     assert (task.status, task.done_at, task.done_by, task.outcome) == (Status.OPEN, None, "", "Done.")
+    assert task.reminded_at is None
     assert ("reopened", task.pk) in received
 
 

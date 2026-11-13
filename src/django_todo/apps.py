@@ -3,6 +3,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 from django.apps import AppConfig
 
+TASKS_AREA = "todo.tasks"
+
 
 class DjangoTodoConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
@@ -12,7 +14,7 @@ class DjangoTodoConfig(AppConfig):
     is_volkanos = True
     # Free text (title, note, outcome) may name people.
     access_areas = [
-        {"key": "todo.tasks", "label": "Tasks for people", "sensitive": ("pii",)},
+        {"key": TASKS_AREA, "label": "Tasks for people", "sensitive": ("pii",)},
     ]
     # Every admin view carries its access_area; no route needs a path rule.
     access_route_rules = []

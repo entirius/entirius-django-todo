@@ -41,6 +41,12 @@ class Task(BaseModel):
         indexes = [
             models.Index(fields=["channel_idx", "status", "owner", "due_at"], name="todo_task_list_idx"),
             models.Index(fields=["channel_idx", "subject_ref"], name="todo_task_subject_idx"),
+            # The reminder's scan across channels: open, owned, not yet reminded.
+            models.Index(
+                fields=["due_at"],
+                condition=Q(status="open", owner__isnull=False, reminded_at__isnull=True),
+                name="todo_task_remind_idx",
+            ),
         ]
         constraints = [
             models.UniqueConstraint(

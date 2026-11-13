@@ -120,8 +120,8 @@ class TaskDetailView(TaskAdminView):
     def patch(self, request: Request, channel_idx: str, pk: int) -> Response:
         updates = parse(TaskUpdateRequest, request.data).model_dump(exclude_unset=True)
         with service_errors("owner_id"):
-            task_service.update(self.task(channel_idx, pk), updates)
-        return _task_payload(self.task(channel_idx, pk))
+            task = task_service.update(self.task(channel_idx, pk), updates)
+        return _task_payload(task)
 
 
 class TaskDoneView(TaskAdminView):

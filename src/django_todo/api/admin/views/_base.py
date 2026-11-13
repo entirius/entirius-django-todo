@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from django_todo.apps import TASKS_AREA
 from django_todo.models import Task
 from django_todo.services import task_service
 
@@ -34,7 +35,7 @@ class Conflict(APIException):
 class TaskAdminView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUser]
-    access_area = "todo.tasks"
+    access_area = TASKS_AREA
 
     @staticmethod
     def task(channel_idx: str, pk: int) -> Task:

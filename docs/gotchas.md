@@ -9,8 +9,9 @@ description: Read before editing the service, the reminder or the API.
   `create()` turns an empty key into null.
 - **`update()` is a whitelist** (`EDITABLE_FIELDS`). Status, closing fields, `dedup_key`, `channel_idx` and
   `reminded_at` are refused — add a dedicated service function instead of widening it.
-- **A changed `due_at` clears `reminded_at`**; the same value keeps it. Reopen keeps `reminded_at`, so a reopened
-  overdue task is not reminded again until its due date changes.
+- **A changed `due_at` or owner, and a reopen, clear `reminded_at`**; the same values keep it.
+- **`update()` saves only the fields it changes** (`update_fields`): close, cancel, reopen and the reminder write
+  with conditional queryset updates, and a full `save()` of a stale instance would undo them.
 - **Signals are sent on commit.** A receiver in a test needs `django_capture_on_commit_callbacks(execute=True)`.
 - **The day is the caller's.** Buckets use the `tz` query parameter (default UTC), not `TIME_ZONE`.
 - **The reminder needs a notifications `Channel` with the same idx.** Without it the task is stamped and skipped.

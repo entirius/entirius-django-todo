@@ -35,7 +35,7 @@ def remind_due() -> int:
 
 def _remind(task: Task) -> bool:
     notified = _notify_owner(task)
-    # Stamped either way: a channel unknown to notifications must not hold the batch back on every run.
+    # Stamped either way: a task notify() refuses must not hold the batch back on every run.
     Task.objects.filter(pk=task.pk).update(reminded_at=timezone.now())
     return notified
 
@@ -57,5 +57,9 @@ def _notify_owner(task: Task) -> bool:
         )
     except Channel.DoesNotExist:
         logger.warning("event=todo.remind skipped=unknown_channel channel=%s task=%s", task.channel_idx, task.pk)
+        return False
+    except ValueError:
+        # The owner vanished between the query and notify(): skip the task, never stall the batch on it.
+        logger.warning("event=todo.remind skipped=unknown_owner channel=%s task=%s", task.channel_idx, task.pk)
         return False
     return True

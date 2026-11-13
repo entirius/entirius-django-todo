@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-"""GDPR hooks (art. 15 export, art. 17 erasure), discovered by `django_leads.gdpr.registry`.
+"""GDPR hooks (art. 15 export, art. 17 erasure), discovered by the GDPR registry of the leads module.
 
 The contract is keyed by e-mail address and a task holds none: it points at subjects and contacts through opaque
 references. Both hooks return empty results. The module that owns a subject or a contact erases the free text of
