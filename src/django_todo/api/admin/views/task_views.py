@@ -100,12 +100,18 @@ class TaskListView(TaskAdminView):
 
 
 class TaskDetailView(TaskAdminView):
-    @extend_schema(tags=TAGS, summary="Get one task", responses={200: TaskResponse, **ERROR_RESPONSES})
+    @extend_schema(
+        tags=TAGS,
+        operation_id="todo_tasks_retrieve",
+        summary="Get one task",
+        responses={200: TaskResponse, **ERROR_RESPONSES},
+    )
     def get(self, request: Request, channel_idx: str, pk: int) -> Response:
         return _task_payload(self.task(channel_idx, pk))
 
     @extend_schema(
         tags=TAGS,
+        operation_id="todo_tasks_update",
         summary="Edit a task",
         description="Only the fields sent change: title, note, due_at, kind, owner_id. A new due date is reminded again.",
         request=TaskUpdateRequest,
@@ -121,6 +127,7 @@ class TaskDetailView(TaskAdminView):
 class TaskDoneView(TaskAdminView):
     @extend_schema(
         tags=TAGS,
+        operation_id="todo_tasks_done",
         summary="Mark a task done with its outcome",
         request=TaskDoneRequest,
         responses={200: TaskResponse, 409: None, **ERROR_RESPONSES},
@@ -137,6 +144,7 @@ class TaskDoneView(TaskAdminView):
 class TaskCancelView(TaskAdminView):
     @extend_schema(
         tags=TAGS,
+        operation_id="todo_tasks_cancel",
         summary="Cancel a task",
         description="There is no delete: a mistake is cancelled.",
         request=TaskCancelRequest,
@@ -154,6 +162,7 @@ class TaskCancelView(TaskAdminView):
 class TaskReopenView(TaskAdminView):
     @extend_schema(
         tags=TAGS,
+        operation_id="todo_tasks_reopen",
         summary="Reopen a done or cancelled task",
         request=None,
         responses={200: TaskResponse, 409: None, **ERROR_RESPONSES},
