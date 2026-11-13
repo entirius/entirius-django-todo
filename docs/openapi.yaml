@@ -1,0 +1,759 @@
+openapi: 3.1.0
+info:
+  title: django-todo Admin API v2
+  version: 0.1.0
+paths:
+  /api/todo/v2/admin/{channel_idx}/tasks/:
+    get:
+      operationId: todo_tasks_list
+      description: Soonest due first, no deadline last; paginated (`page`, `page_size`
+        ≤ 100).
+      summary: List tasks of the channel
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: due
+        schema:
+          type: string
+          enum:
+          - none
+          - overdue
+          - today
+          - upcoming
+        description: Due bucket on the local day.
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - linkedin
+          - mail
+          - meeting
+          - phone
+          - todo
+        description: Kind.
+      - in: query
+        name: owner
+        schema:
+          type: string
+        description: '`me`, `none` (unowned) or a user id.'
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number.
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - done
+          - open
+        description: Only this status.
+      - in: query
+        name: subject_ref
+        schema:
+          type: string
+        description: Only tasks about this subject.
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: IANA time zone of the caller's day; default UTC.
+      tags:
+      - Todo
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+          description: ''
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+    post:
+      operationId: todo_tasks_create
+      description: 'The owner defaults to the caller; `owner_id: null` creates an
+        unowned task.'
+      summary: Create a task
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      tags:
+      - Todo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+          description: ''
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+  /api/todo/v2/admin/{channel_idx}/tasks/{id}/:
+    get:
+      operationId: todo_tasks_retrieve
+      summary: Get one task
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Todo
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+          description: ''
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+    patch:
+      operationId: todo_tasks_update
+      description: 'Only the fields sent change: title, note, due_at, kind, owner_id.
+        A new due date is reminded again.'
+      summary: Edit a task
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Todo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+          description: ''
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+  /api/todo/v2/admin/{channel_idx}/tasks/{id}/cancel/:
+    post:
+      operationId: todo_tasks_cancel
+      description: 'There is no delete: a mistake is cancelled.'
+      summary: Cancel a task
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Todo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCancelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCancelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCancelRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+          description: ''
+        '409':
+          description: No response body
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+  /api/todo/v2/admin/{channel_idx}/tasks/{id}/done/:
+    post:
+      operationId: todo_tasks_done
+      summary: Mark a task done with its outcome
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Todo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDoneRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskDoneRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskDoneRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+          description: ''
+        '409':
+          description: No response body
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+  /api/todo/v2/admin/{channel_idx}/tasks/{id}/reopen/:
+    post:
+      operationId: todo_tasks_reopen
+      summary: Reopen a done or cancelled task
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Todo
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+          description: ''
+        '409':
+          description: No response body
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+  /api/todo/v2/admin/{channel_idx}/today/:
+    get:
+      operationId: todo_today
+      description: Counts of the caller's open tasks overdue, due today and in the
+        next 7 days, and the first 50 overdue and today tasks, oldest due first.
+      summary: The caller's day
+      parameters:
+      - in: path
+        name: channel_idx
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: IANA time zone of the caller's day; default UTC.
+      tags:
+      - Todo
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodayResponse'
+          description: ''
+        '400':
+          description: No response body
+        '401':
+          description: No response body
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+components:
+  schemas:
+    Kind:
+      enum:
+      - mail
+      - phone
+      - linkedin
+      - meeting
+      - todo
+      title: Kind
+      type: string
+    PatchedTaskUpdateRequest:
+      additionalProperties: false
+      description: Only the fields sent change.
+      properties:
+        title:
+          default: ''
+          description: What to do.
+          examples:
+          - Call back
+          maxLength: 255
+          minLength: 1
+          title: Title
+          type: string
+        note:
+          default: ''
+          description: Details.
+          examples:
+          - ''
+          title: Note
+          type: string
+        due_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          description: Deadline; a new one is reminded again.
+          examples:
+          - null
+          title: Due At
+        kind:
+          $ref: '#/components/schemas/Kind'
+          default: todo
+          description: mail, phone, linkedin, meeting or todo.
+          examples:
+          - mail
+        owner_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          description: Who does it; null = nobody.
+          examples:
+          - 7
+          title: Owner Id
+      title: TaskUpdateRequest
+      type: object
+    TaskCancelRequest:
+      additionalProperties: false
+      properties:
+        reason:
+          default: ''
+          description: Why it is cancelled; stored as the outcome.
+          examples:
+          - Duplicate.
+          title: Reason
+          type: string
+      title: TaskCancelRequest
+      type: object
+    TaskCreateRequest:
+      additionalProperties: false
+      properties:
+        subject_ref:
+          description: What the task is about, `<module>.<Model>:<pk>`.
+          examples:
+          - leads.Company:42
+          maxLength: 128
+          minLength: 1
+          title: Subject Ref
+          type: string
+        subject_label:
+          default: ''
+          description: What the list shows for the subject.
+          examples:
+          - Example Ltd
+          maxLength: 255
+          title: Subject Label
+          type: string
+        contact_ref:
+          default: ''
+          description: A person the task is about.
+          examples:
+          - leads.Contact:7
+          maxLength: 128
+          title: Contact Ref
+          type: string
+        kind:
+          $ref: '#/components/schemas/Kind'
+          default: todo
+          description: mail, phone, linkedin, meeting or todo.
+          examples:
+          - phone
+        title:
+          description: What to do.
+          examples:
+          - Call back about the offer
+          maxLength: 255
+          minLength: 1
+          title: Title
+          type: string
+        note:
+          default: ''
+          description: Details.
+          examples:
+          - Asked for a call after 3 pm.
+          title: Note
+          type: string
+        due_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          description: Deadline with an offset; null = none.
+          examples:
+          - '2026-11-14T09:00:00+01:00'
+          title: Due At
+        owner_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          description: Who does it; omitted = the caller, null = nobody.
+          examples:
+          - 7
+          title: Owner Id
+      required:
+      - subject_ref
+      - title
+      title: TaskCreateRequest
+      type: object
+    TaskDoneRequest:
+      additionalProperties: false
+      properties:
+        outcome:
+          default: ''
+          description: What happened.
+          examples:
+          - Agreed on a demo next week.
+          title: Outcome
+          type: string
+      title: TaskDoneRequest
+      type: object
+    TaskListResponse:
+      properties:
+        count:
+          description: Total matching tasks.
+          examples:
+          - 1
+          title: Count
+          type: integer
+        next:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Next page URL.
+          examples:
+          - null
+          title: Next
+        previous:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Previous page URL.
+          examples:
+          - null
+          title: Previous
+        results:
+          description: Soonest due first, no deadline last.
+          examples:
+          - []
+          items:
+            $ref: '#/components/schemas/TaskResponse'
+          title: Results
+          type: array
+      required:
+      - count
+      - next
+      - previous
+      - results
+      title: TaskListResponse
+      type: object
+    TaskResponse:
+      properties:
+        id:
+          description: Task id.
+          examples:
+          - 12
+          title: Id
+          type: integer
+        subject_ref:
+          description: What the task is about.
+          examples:
+          - leads.Company:42
+          title: Subject Ref
+          type: string
+        subject_label:
+          description: What the list shows for the subject.
+          examples:
+          - Example Ltd
+          title: Subject Label
+          type: string
+        contact_ref:
+          description: A person the task is about; empty when none.
+          examples:
+          - ''
+          title: Contact Ref
+          type: string
+        kind:
+          description: mail, phone, linkedin, meeting or todo.
+          examples:
+          - phone
+          title: Kind
+          type: string
+        title:
+          description: What to do.
+          examples:
+          - Call back about the offer
+          title: Title
+          type: string
+        note:
+          description: Details.
+          examples:
+          - ''
+          title: Note
+          type: string
+        due_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: Deadline; null = none.
+          examples:
+          - '2026-11-14T08:00:00Z'
+          title: Due At
+        owner:
+          anyOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
+          description: Who does it; null = nobody.
+          examples:
+          - null
+        status:
+          description: open, done or cancelled.
+          examples:
+          - open
+          title: Status
+          type: string
+        outcome:
+          description: What happened, or why it was cancelled.
+          examples:
+          - ''
+          title: Outcome
+          type: string
+        done_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: When it was closed.
+          examples:
+          - null
+          title: Done At
+        done_by:
+          description: Username of who closed it.
+          examples:
+          - ''
+          title: Done By
+          type: string
+        created_by:
+          description: Username or system actor that created it.
+          examples:
+          - anna
+          title: Created By
+          type: string
+        source:
+          description: Machine tag of the creator.
+          examples:
+          - manual
+          title: Source
+          type: string
+        created:
+          description: When it was created.
+          examples:
+          - '2026-11-13T08:00:00Z'
+          format: date-time
+          title: Created
+          type: string
+      required:
+      - id
+      - subject_ref
+      - subject_label
+      - contact_ref
+      - kind
+      - title
+      - note
+      - due_at
+      - owner
+      - status
+      - outcome
+      - done_at
+      - done_by
+      - created_by
+      - source
+      - created
+      title: TaskResponse
+      type: object
+    TodayResponse:
+      properties:
+        overdue:
+          description: Open tasks of the caller due before today.
+          examples:
+          - 2
+          title: Overdue
+          type: integer
+        today:
+          description: Open tasks of the caller due today.
+          examples:
+          - 3
+          title: Today
+          type: integer
+        upcoming_7d:
+          description: Open tasks of the caller due in the next 7 days after today.
+          examples:
+          - 4
+          title: Upcoming 7D
+          type: integer
+        results:
+          description: The first 50 overdue and today tasks, oldest due first.
+          examples:
+          - []
+          items:
+            $ref: '#/components/schemas/TaskResponse'
+          title: Results
+          type: array
+      required:
+      - overdue
+      - today
+      - upcoming_7d
+      - results
+      title: TodayResponse
+      type: object
+    UserRef:
+      properties:
+        id:
+          description: User id.
+          examples:
+          - 7
+          title: Id
+          type: integer
+        username:
+          description: Login name.
+          examples:
+          - anna
+          title: Username
+          type: string
+        name:
+          description: Full name; empty when not set.
+          examples:
+          - Anna Nowak
+          title: Name
+          type: string
+      required:
+      - id
+      - username
+      - name
+      title: UserRef
+      type: object
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
