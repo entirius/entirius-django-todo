@@ -332,7 +332,7 @@ wheels = [
 [[package]]
 name = "entirius-django-notifications"
 version = "0.3.0"
-source = { editable = "../entirius-django-notifications" }
+source = { git = "https://github.com/entirius/entirius-django-notifications?branch=develop#d50b1eaf8e4128283adea74a55ddbb5d4b56c13b" }
 dependencies = [
     { name = "celery" },
     { name = "django", version = "5.2.19", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -345,32 +345,6 @@ dependencies = [
     { name = "entirius-py-idx-normalizator" },
     { name = "pydantic" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "celery", specifier = ">=5.3" },
-    { name = "dj-database-url", marker = "extra == 'test'", specifier = ">=2.0" },
-    { name = "django", specifier = ">=4.2" },
-    { name = "djangorestframework", specifier = ">=3.14" },
-    { name = "djangorestframework-simplejwt", specifier = ">=5.3" },
-    { name = "drf-spectacular", specifier = ">=0.27" },
-    { name = "entirius-django-email", marker = "extra == 'email'", specifier = ">=4.0.1" },
-    { name = "entirius-django-email", marker = "extra == 'test'", specifier = ">=4.0.1" },
-    { name = "entirius-django-regional", specifier = ">=2.0.1" },
-    { name = "entirius-django-utils", specifier = ">=2.0.0" },
-    { name = "entirius-py-googlechat", marker = "extra == 'googlechat'", specifier = ">=0.1.0" },
-    { name = "entirius-py-googlechat", marker = "extra == 'test'", specifier = ">=0.1.0" },
-    { name = "entirius-py-idx-normalizator", specifier = ">=2.0.0" },
-    { name = "factory-boy", marker = "extra == 'test'" },
-    { name = "pre-commit", marker = "extra == 'dev'" },
-    { name = "psycopg", extras = ["binary"], marker = "extra == 'test'", specifier = ">=3.1" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pytest", marker = "extra == 'test'" },
-    { name = "pytest-django", marker = "extra == 'test'" },
-    { name = "respx", marker = "extra == 'test'" },
-    { name = "ruff", marker = "extra == 'dev'" },
-]
-provides-extras = ["dev", "email", "googlechat", "test"]
 
 [[package]]
 name = "entirius-django-regional"
@@ -434,7 +408,7 @@ requires-dist = [
     { name = "djangorestframework-simplejwt", specifier = ">=5.3" },
     { name = "drf-spectacular", specifier = ">=0.27" },
     { name = "entirius-django-access", marker = "extra == 'access'", specifier = ">=1.1.0" },
-    { name = "entirius-django-notifications", marker = "extra == 'notifications'", editable = "../entirius-django-notifications" },
+    { name = "entirius-django-notifications", marker = "extra == 'notifications'", git = "https://github.com/entirius/entirius-django-notifications?branch=develop" },
     { name = "entirius-django-utils", specifier = ">=2.4.0" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'test'", specifier = ">=3.1" },

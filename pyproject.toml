@@ -59,10 +59,10 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/django_todo"]
 
-# entirius-django-notifications 0.3.0 (recipient_user_id, escalate) is not on PyPI yet — resolve the sibling clone
+# entirius-django-notifications 0.3.0 (recipient_user_id, escalate) is not on PyPI yet — resolve its develop branch
 # until its release, then drop this block and re-lock.
 [tool.uv.sources]
-entirius-django-notifications = { path = "../entirius-django-notifications", editable = true }
+entirius-django-notifications = { git = "https://github.com/entirius/entirius-django-notifications", branch = "develop" }
 
 [tool.ruff]
 line-length = 120
