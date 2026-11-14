@@ -28,6 +28,7 @@ access-ownership files skip.
 - `test_access_ownership.py` — every admin route carries an area of this app.
 - `test_openapi.py` — `spectacular --validate --fail-on-warn`.
 - `test_migrations.py` — no model change without a migration.
+- `test_version.py` — `__version__` equals the `pyproject.toml` version (munin reports it).
 - `test_gdpr.py` — both hooks exist and return empty results.
 
 In the entirius-zeno harness: `make module-test MODULE=entirius-django-todo`.
